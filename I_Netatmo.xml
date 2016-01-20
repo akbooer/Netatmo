@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<implementation>
+    <settings>
+        <protocol>cr</protocol>
+    </settings>
+
+   <files>L_Netatmo.lua</files>
+ 
+   <startup>init</startup>
+
+    <actionList>    </actionList>
+</implementation>
+

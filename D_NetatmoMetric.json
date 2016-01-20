@@ -1,0 +1,251 @@
+{
+	"default_icon": "NetatmoMetric.png",
+    "flashicon": "icons\/NetatmoMetric.png",
+    "state_icons":[
+      "NetatmoMetric_0.png",
+      "NetatmoMetric_25.png",
+      "NetatmoMetric_50.png",
+      "NetatmoMetric_75.png",
+      "NetatmoMetric_100.png",
+      "NetatmoMetric_125.png",
+      "NetatmoMetric_150.png",
+      "NetatmoMetric_175.png",
+      "NetatmoMetric_200.png",
+      "NetatmoMetric_225.png",
+      "NetatmoMetric_250.png",
+		{ 	"img": "NetatmoMetric_0.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 0 
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_25.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 1 
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_50.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 2 
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_75.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 3 
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_100.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 4 
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_125.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 5 
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_150.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 6 
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_175.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 7
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_200.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 8
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_225.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 9
+				} 
+			]
+		},
+		{ 	"img": "NetatmoMetric_250.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 10 
+				} 
+			]
+		}
+    ],
+    "DisplayStatus": {
+        "Service": "urn:akbooer-com:serviceId:Netatmo1",
+        "Variable": "IconSet",
+        "MinValue": "0",
+        "MaxValue": "4"
+    },
+	"Tabs": [
+		{
+			"Label": {
+				"lang_tag": "tabname_control",
+				"text": "Control"
+			},
+			"Position": "0",
+			"TabType": "flash",
+			"ControlGroup":[
+				{
+					"id": "1",
+					"scenegroup": "1"
+				}
+			],
+			"SceneGroup":[
+				{
+					"id": "1",
+					"top": "1.5",
+					"left": "0.25",
+					"x": "1.5",
+					"y": "2"
+				}
+			],
+			"Control": [
+				{
+					"ControlGroup":"1",
+					"ControlType": "variable",
+					"top": "0",
+					"left": "0",
+					"Display": {
+						"Service": "urn:upnp-org:serviceId:altui1",
+						"Variable": "DisplayLine1",
+						"Top": 60,
+						"Left": 50,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"1",
+					"ControlType": "variable",
+					"top": "1",
+					"left": "0",
+					"Display": {
+						"Service": "urn:upnp-org:serviceId:altui1",
+						"Variable": "DisplayLine2",
+						"Top": 80,
+						"Left": 50,
+						"Width": 75,
+						"Height": 20
+					}
+				}
+			]
+		},
+		{
+			"Label": {
+				"lang_tag": "advanced",
+				"text": "Advanced"
+			},
+			"Position": "1",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "advanced_device"
+		},
+        {
+            "Label": {
+                "lang_tag": "logs",
+                "text": "Logs"
+            },
+            "Position": "2",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "device_logs"
+        },
+        {
+            "Label": {
+                "lang_tag": "notifications",
+                "text": "Notifications"
+            },
+            "Position": "3",
+            "TabType": "javascript",
+            "ScriptName": "shared.js",
+            "Function": "device_notifications"
+        }
+	],
+"eventList2": [
+        {
+            "id": 1,
+            "label": {
+                "lang_tag": "metric_goes_above",
+                "text": "Metric goes above"
+            },
+            "serviceId": "urn:micasaverde-com:serviceId:GenericSensor1",
+	    "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "i4",
+                    "name": "CurrentLevel",
+                    "comparisson": ">",
+                    "prefix": {
+						"lang_tag":"Metric",
+						"text": "Metric"
+					},
+                    "suffix": {},
+                    "HumanFriendlyText": {
+                        "lang_tag": "hft_metric_goes_above",
+                        "text": "Metric reported by _DEVICE_NAME_ goes above _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "label": {
+                "lang_tag": "metric_goes_below",
+                "text": "Metric goes below"
+            },
+            "serviceId": "urn:micasaverde-com:serviceId:GenericSensor1",
+	    "norepeat": "1",
+            "argumentList": [
+                {
+                    "id": 1,
+                    "dataType": "i4",
+                    "name": "CurrentLevel",
+                    "comparisson": "<",
+                    "prefix": {
+						"lang_tag":"Metric",
+						"text": "Metric"
+					},
+                    "suffix": {},
+                    "HumanFriendlyText": {
+                        "lang_tag": "metrics_below",
+                        "text": "Metric reported by _DEVICE_NAME_ goes below _ARGUMENT_VALUE_"
+                    }
+                }
+            ]
+        }
+    ],
+	"DeviceType": "urn:akbooer-com:device:NetatmoMetric:1"
+}

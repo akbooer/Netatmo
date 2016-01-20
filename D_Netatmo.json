@@ -1,0 +1,218 @@
+{
+	"default_icon": "Netatmo.png",
+    "flashicon": "icons\/Netatmo.png",
+    "state_icons":[
+        "Netatmo_0.png",
+        "Netatmo_25.png",
+        "Netatmo_50.png",
+        "Netatmo_75.png",
+        "Netatmo_100.png",
+		{ 	"img": "Netatmo_0.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 0 
+				} 
+			]
+		},
+		{ 	"img": "Netatmo_25.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 1 
+				} 
+			]
+		},
+		{ 	"img": "Netatmo_50.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 2 
+				} 
+			]
+		},
+		{ 	"img": "Netatmo_75.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 3 
+				} 
+			]
+		},
+		{ 	"img": "Netatmo_100.png", 
+			"conditions": [ 
+				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
+					"variable": "IconSet", 
+					"operator": "==","value": 4 
+				} 
+			]
+		}
+    ],
+    "DisplayStatus": {
+        "Service": "urn:akbooer-com:serviceId:Netatmo1",
+        "Variable": "IconSet",
+        "MinValue": "0",
+        "MaxValue": "4"
+    },
+	"Tabs": [
+		{
+			"Label": {
+				"lang_tag": "tabname_control",
+				"text": "Control"
+			},
+			"Position": "0",
+			"TabType": "flash",
+			"ControlGroup":[
+				{
+					"id": "1",
+					"scenegroup": "1"
+				}
+			],
+			"SceneGroup":[
+				{
+					"id": "1",
+					"top": "1.5",
+					"left": "0.25",
+					"x": "2",
+					"y": "2"
+				}
+			],
+			"Control": [
+				{
+					"ControlGroup":"1",
+					"ControlType": "label",
+					"top": "0",
+					"left": "0",
+					"Label": {
+						"lang_tag": "timestamp",
+						"text": "Last Update"
+					},
+					"Display": {
+						"Top": 60,
+						"Left": 50,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"1",
+					"ControlType": "variable",
+					"top": "1",
+					"left": "0",
+					"Display": {
+						"Service": "urn:akbooer-com:serviceId:Netatmo1",
+						"Variable": "Timestamp",
+						"Top": 60,
+						"Left": 200,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"2",
+					"ControlType": "label",
+					"top": "4",
+					"left": "0",
+					"Label": {
+						"lang_tag": "memused",
+						"text": "App Memory Used (kB)"
+					},
+					"Display": {
+						"Top": 80,
+						"Left": 50,
+						"Width": 75,
+						"Height": 20
+					}
+				},  
+				{
+					"ControlGroup":"2",
+					"ControlType": "variable",
+					"top": "5",
+					"left": "0",
+					"Display": {
+						"Service": "urn:akbooer-com:serviceId:Netatmo1",
+						"Variable": "AppMemoryUsed",
+						"Top": 80,
+						"Left": 200,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup": "2",
+					"ControlType": "label",
+					"Label": {
+						"lang_tag": "links",
+						"text": "Links to reports:"
+					},
+					"top": "0",
+					"Display": {
+						"Top": 180,
+						"Left": 50,
+						"Width": 220,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"2",
+					"ControlType": "label",
+					"top": "0",
+					"left": "0",
+					"Label": {
+						"lang_tag": "devicetree",
+						"text": "<a href='/port_3480/data_request?id=lr_Netatmo&page=organization' target='_blank'>Device Tree</a>"
+					},
+					"Display": {
+						"Top": 200,
+						"Left": 50,
+						"Width": 220,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"2",
+					"ControlType": "label",
+					"top": "0",
+					"left": "0",
+					"Label": {
+						"lang_tag": "devicelist",
+						"text": "<a href='/port_3480/data_request?id=lr_Netatmo&page=list' target='_blank'>Device List</a>"
+					},
+					"Display": {
+						"Top": 220,
+						"Left": 50,
+						"Width": 220,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"3",
+					"ControlType": "label",
+					"top": "0",
+					"left": "0",
+					"Label": {
+						"lang_tag": "diagnostics",
+						"text": "<a href='/port_3480/data_request?id=lr_Netatmo&page=diagnostics' target='_blank'>Diagnostics</a>"
+					},
+					"Display": {
+						"Top": 240,
+						"Left": 50,
+						"Width": 220,
+						"Height": 20
+					}
+				}
+			]
+		},
+		{
+			"Label": {
+				"lang_tag": "advanced",
+				"text": "Advanced"
+			},
+			"Position": "2",
+			"TabType": "javascript",
+			"ScriptName": "shared.js",
+			"Function": "advanced_device"
+		}
+	],
+	"DeviceType": "urn:akbooer-com:device:Netatmo:1"
+}
