@@ -39,7 +39,9 @@ local version = "2016.01.20  @akbooer"
 -- 04-Dec-2015, add support for new wind module
 -- 14-Jan-2016, further use of new API and single device type NetatmoMetric for all non-standard metrics
 -- 20-Jan-2016, Release 4: candidate
--- 
+-- 26-Jan-2016, fix wind child units problem, thanks @korttoma (and for the use of your wind gauge)
+--              see: http://forum.micasaverde.com/index.php/topic,35162.msg266522.html#msg266522
+--
 
 --local socket =  require "socket"
 local https 	= require "ssl.https"
@@ -81,7 +83,7 @@ local metric_types =     -- these can all be written to child devices
   [P] = {P, "AbsolutePressure"},
   [N] = {N},
   [R] = {R, "SumRain1", "SumRain24"},
-  [W] = {W},
+  [W] = {W, "GustStrength", "MaxWindStr"},
 }
 
 local type_of_metric = {}     -- reverse lookup table for metric type
@@ -101,15 +103,15 @@ local dateFormat         = "DateFormat"           -- the os.date style format fo
 -- for writing to Luup variables, need serviceId and variable name for each sensor type
 -- for creating child devices also need device xml filename
 local LuupInfo = setmetatable (
-    {	
-      [T] = { deviceXML = tempXML,  service = tempSID,  variable = "CurrentTemperature"},
-      [H] = { deviceXML = humidXML, service = humidSID, variable = "CurrentLevel"}
-    },
-    {__index = function ()  -- default for everything else
-        return { deviceXML = genericXML, service = genericSID, variable = "CurrentLevel"} 
-      end
-    }
-  )
+  {	
+    [T] = { deviceXML = tempXML,  service = tempSID,  variable = "CurrentTemperature"},
+    [H] = { deviceXML = humidXML, service = humidSID, variable = "CurrentLevel"}
+  },
+  {__index = function ()  -- default for everything else
+      return { deviceXML = genericXML, service = genericSID, variable = "CurrentLevel"} 
+    end
+  }
+)
 
 local context = {}        -- for debugging, etc.
 local ChildDevice = {}    -- lookup table: ChildDevice [ChildId] = ChildObject
@@ -212,8 +214,8 @@ end
 
 -- admin data includes amongst other things: 
 -- unit (temperature, rain): 0 -> metric system, 1 -> imperial system 
--- windunit: 0 -> kph, 1 -> mph, 2 -> ms, 3 -> beaufort, 4 -> knot
 -- pressureunit: 0 -> mbar, 1 -> inHg, 2 -> mmHg 
+-- windunit: 0 -> kph, 1 -> mph, 2 -> m/s, 3 -> beaufort, 4 -> knot
 -- 
 local function Metrics (admin)
 
@@ -478,7 +480,8 @@ local function orgChart (p)		-- a different visualization of the station / modul
     for module, m in pairs (s) do
       d.addRow {module, station, ''}
       local parent = module
-      for _,sensor in ipairs {T,H,C,P,N,R, "SumRain1","SumRain24", W, "WindAngle"} do			-- enforce specific ordering
+      for _,sensor in ipairs {T,H,C,P,N,R, 
+          "SumRain1","SumRain24", W, "WindAngle", "GustStrength", "MaxWindStr"} do		-- enforce specific ordering
         local value = (m.measurements or {})[sensor]
         if value then
           local moduleSensor = module..sensor
@@ -861,6 +864,12 @@ function init  (lul_device)
   end
 
   metric = Metrics (info.user.administrative)     -- set up metric unit conversions, etc.
+-- TODO: FOR TESTING ONLY: override units
+-- unit (temperature, rain): 0 -> metric system, 1 -> imperial system 
+-- pressureunit: 0 -> mbar, 1 -> inHg, 2 -> mmHg 
+-- windunit: 0 -> kph, 1 -> mph, 2 -> m/s, 3 -> beaufort, 4 -> knot
+--  metric = Metrics {unit = 1, pressureunit = 1, windunit = 2}
+--
   stationInfo = station_data (info)				   -- create useful table with device configuration
   context = {NetatmoConfig = info, StationInfo = stationInfo}
   context.VERSION = version
