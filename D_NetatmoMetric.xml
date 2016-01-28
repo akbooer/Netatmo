@@ -9,7 +9,7 @@
     <Category_Num>12</Category_Num>
     <SubCategory_Num>0</SubCategory_Num>
     <staticJson>D_NetatmoMetric.json</staticJson> 
-    <friendlyName>Netatmo Sensor</friendlyName>
+    <friendlyName>Sensor</friendlyName>
     <manufacturer>Netatmo</manufacturer>
     <manufacturerURL>http://www.netatmo.com/</manufacturerURL>
     <modelDescription>Netatmo Urban Weather Station</modelDescription>
