@@ -242,7 +242,7 @@ local function ChartWrapper (this)
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
-      google.charts.load('current', {'packages':['corechart', 'table', 'treemap']});
+      google.charts.load('current', {'packages':['corechart', 'table', 'treemap', 'orgchart']});
       google.setOnLoadCallback(gViz);
       function gViz() {
           var w = new google.visualization.ChartWrapper(]], toJScr (opts), [[);
