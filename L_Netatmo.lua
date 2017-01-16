@@ -1,5 +1,5 @@
 
-local version = "2016.01.20  @akbooer"   
+local version = "2017.01.16  @akbooer"   
 
 ------------------------------------------------------------------------
 --
@@ -42,6 +42,8 @@ local version = "2016.01.20  @akbooer"
 -- 26-Jan-2016, fix wind child units problem, thanks @korttoma (and for the use of your wind gauge)
 --              see: http://forum.micasaverde.com/index.php/topic,35162.msg266522.html#msg266522
 --
+
+-- 2017.01.16   fix icon name typo in setMetricIcon, thanks @reneboer
 
 --local socket =  require "socket"
 local https 	= require "ssl.https"
@@ -183,7 +185,7 @@ end
 -- corresponding to files NetatmoMetric_0.png, ... NetatmoMetric_250.png
 -- to make it work on UI5 and UI7
 local function setMetricIcon (value, device)
-  local icons = {T, H, C, P, N, R, W, "CO2_low", "CO2_mid", "CO2_high"}
+  local icons = {T, H, C, P, N, R, W, "CO2_low", "CO2_med", "CO2_high"}
   local index = {generic = 0}
   for i,n in ipairs (icons) do index[n] = i end
   set (iconsVariable, index[value] or 0, nil, device)
