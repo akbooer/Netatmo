@@ -44,6 +44,7 @@ local version = "2017.01.16  @akbooer"
 --
 
 -- 2017.01.16   fix icon name typo in setMetricIcon, thanks @reneboer
+-- 2017.02.14   fix nil value error in format
 
 --local socket =  require "socket"
 local https 	= require "ssl.https"
@@ -285,7 +286,7 @@ local function Metrics (admin)
     local conversion = units[type_of_metric[sensor] or '']
     if conversion then
       localUnit  = conversion.unit 	    -- unit converted to local preference
-      value = value * conversion.m + conversion.c + (offset or 0)	-- apply units conversion
+      value = (value or 0) * conversion.m + conversion.c + (offset or 0)	-- apply units conversion + 2017.02.14
       value = ("%0."..conversion.dp.."f"): format (value)		      -- specify precision for readings
     end
     return value, localUnit 
