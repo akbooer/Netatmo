@@ -1,5 +1,27 @@
+ABOUT = {
+  NAME          = "Netatmo",
+  VERSION       = "2018.02.27",
+  DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
+  AUTHOR        = "@akbooer",
+  COPYRIGHT     = "(c) 2013-2018 AKBooer",
+  DOCUMENTATION = "https://github.com/akbooer/Netatmo/tree/master/",
+  LICENSE       = [[
+  Copyright 2013-2018 AK Booer
 
-local version = "2017.01.16  @akbooer"   
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+]]
+}
+
 
 ------------------------------------------------------------------------
 --
@@ -7,7 +29,7 @@ local version = "2017.01.16  @akbooer"
 --
 -- Virtual sensors for all your Netatmo Weather Station devices and modules (
 -- temperature, humidity, pressure, CO2, noise & rainfall.)  
--- @akbooer 2013-2016
+-- @akbooer 2013-2017
 -- 
 -- inspired by the excellent web tutorial by Sébastien Joly "Collecter les données d'une station Netatmo":
 -- http://www.domotique-info.fr/2013/05/collecter-les-donnees-dune-station-netatmo-depuis-une-vera-tuto/
@@ -46,7 +68,9 @@ local version = "2017.01.16  @akbooer"
 -- 2017.01.16   fix icon name typo in setMetricIcon, thanks @reneboer
 -- 2017.02.14   fix nil value error in format
 
---local socket =  require "socket"
+-- 2018.02.27   add ABOUT global with VERSION for openLuup Plugins page
+
+
 local https 	= require "ssl.https"
 local library	= require "L_Netatmo2"
 
@@ -820,7 +844,7 @@ end
 -- init () called on startup
 function init  (lul_device)	
   NetatmoID = lul_device			-- save the global device ID
-  set ('Version', version)		-- save code version number in UI variable
+  set ('Version', ABOUT.VERSION)		-- save code version number in UI variable
 
   -- Get user-defined info, creating the variables in the UI with defaults if required
 
@@ -875,7 +899,7 @@ function init  (lul_device)
 --
   stationInfo = station_data (info)				   -- create useful table with device configuration
   context = {NetatmoConfig = info, StationInfo = stationInfo}
-  context.VERSION = version
+  context.VERSION = ABOUT.VERSION
 
   log 'creating child devices...'
   create_children (stationInfo, childSensors)     -- child device structure for Netatmo modules and sensors
