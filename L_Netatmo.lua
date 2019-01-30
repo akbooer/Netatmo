@@ -1,12 +1,14 @@
+module ("L_Netatmo", package.seeall)
+
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2018.02.27",
+  VERSION       = "2019.01.30",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
-  COPYRIGHT     = "(c) 2013-2018 AKBooer",
+  COPYRIGHT     = "(c) 2013-2019 AKBooer",
   DOCUMENTATION = "https://github.com/akbooer/Netatmo/tree/master/",
   LICENSE       = [[
-  Copyright 2013-2018 AK Booer
+  Copyright 2013-2019 AK Booer
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -69,6 +71,8 @@ ABOUT = {
 -- 2017.02.14   fix nil value error in format
 
 -- 2018.02.27   add ABOUT global with VERSION for openLuup Plugins page
+
+-- 2019.01.30   move HTTP handler startup to earlier in init code
 
 
 local https 	= require "ssl.https"
@@ -438,7 +442,7 @@ end  -- netatmoAPI module
 -- build the measurements list from the device/module dashboard_data
 local function build_measurements (m)
   local x = {Battery= m.battery_percent}        -- throw in the battery level for good measure
-  for name,value in pairs (m.dashboard_data) do
+  for name,value in pairs (m.dashboard_data or {}) do   -- 2019.01.30  TODO: avoid nil pointer... but WHY?
     -- remove underscores and change to CamelCase
     local Name = name: gsub ("_(%w)", string.upper): gsub ("^%w", string.upper) 
     if type (value) ~= "table" then x[Name] = value end   -- ignore table structures
@@ -890,6 +894,8 @@ function init  (lul_device)
     return false, "Failed to get stations data", "Netatmo" 
   end
 
+  luup.register_handler ("HTTP_Netatmo", "Netatmo") -- HTTP request handler (2019.01.30  moved earlier in code)
+
   metric = Metrics (info.user.administrative)     -- set up metric unit conversions, etc.
 -- TODO: FOR TESTING ONLY: override units
 -- unit (temperature, rain): 0 -> metric system, 1 -> imperial system 
@@ -907,8 +913,6 @@ function init  (lul_device)
 
   luup.call_delay ('refreshNetatmo', 10, "")			 -- periodic refresh of access tokens
   luup.call_delay ('pollNetatmo', 20, "")				   -- periodic poll of measurements
-
-  luup.register_handler ("HTTP_Netatmo", "Netatmo") -- HTTP request handler
 
   set_failure (0)
   setNetatmoIcon "clear"       -- clear icon after successful initialization
