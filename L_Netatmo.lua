@@ -2,7 +2,7 @@ module ("L_Netatmo", package.seeall)
 
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2019.01.30",
+  VERSION       = "2019.12.16",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
   COPYRIGHT     = "(c) 2013-2019 AKBooer",
@@ -72,7 +72,8 @@ ABOUT = {
 
 -- 2018.02.27   add ABOUT global with VERSION for openLuup Plugins page
 
--- 2019.01.30   move HTTP handler startup to earlier in init code
+-- 2019.01.30   move HTTP handler startup to earlier in init code (debug info available)
+-- 2019.12.16   fix error in D_NetatmoMetric.xml, update .json file to point to CDN for online icons
 
 
 local https 	= require "ssl.https"
@@ -784,7 +785,7 @@ end
 local function create_children (stations, childSensors)
   local ID = childID ()											-- access child ID name utilities
   local makeChild = {}											-- table of sensors for which to create child devices
-  for c in childSensors:gmatch "%w" do			-- looking for individual (upercase) letters...
+  for c in childSensors:gmatch "%w" do			-- looking for individual (uppercase) letters...
     local sensor = THCPNRW[c] 
     if sensor then makeChild[sensor] = true end
   end

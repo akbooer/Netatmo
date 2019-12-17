@@ -1,19 +1,8 @@
 {
-	"default_icon": "NetatmoMetric.png",
-    "flashicon": "icons\/NetatmoMetric.png",
+	"default_icon": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric.png",
+    "flashicon":  "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric.png",
     "state_icons":[
-      "NetatmoMetric_0.png",
-      "NetatmoMetric_25.png",
-      "NetatmoMetric_50.png",
-      "NetatmoMetric_75.png",
-      "NetatmoMetric_100.png",
-      "NetatmoMetric_125.png",
-      "NetatmoMetric_150.png",
-      "NetatmoMetric_175.png",
-      "NetatmoMetric_200.png",
-      "NetatmoMetric_225.png",
-      "NetatmoMetric_250.png",
-		{ 	"img": "NetatmoMetric_0.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_0.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -21,7 +10,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_25.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_25.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -29,7 +18,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_50.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_50.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -37,7 +26,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_75.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_75.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -45,7 +34,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_100.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_100.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -53,7 +42,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_125.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_125.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -61,7 +50,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_150.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_150.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -69,7 +58,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_175.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_175.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -77,7 +66,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_200.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_200.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -85,7 +74,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_225.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_225.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -93,7 +82,7 @@
 				} 
 			]
 		},
-		{ 	"img": "NetatmoMetric_250.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_250.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 

@@ -1,13 +1,8 @@
 {
-	"default_icon": "Netatmo.png",
-    "flashicon": "icons\/Netatmo.png",
+	"default_icon": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/Netatmo.png",
+    "flashicon":  "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/Netatmo.png",
     "state_icons":[
-        "Netatmo_0.png",
-        "Netatmo_25.png",
-        "Netatmo_50.png",
-        "Netatmo_75.png",
-        "Netatmo_100.png",
-		{ 	"img": "Netatmo_0.png", 
+		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/Netatmo_0.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -15,7 +10,7 @@
 				} 
 			]
 		},
-		{ 	"img": "Netatmo_25.png", 
+		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/Netatmo_25.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -23,7 +18,7 @@
 				} 
 			]
 		},
-		{ 	"img": "Netatmo_50.png", 
+		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/Netatmo_50.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -31,7 +26,7 @@
 				} 
 			]
 		},
-		{ 	"img": "Netatmo_75.png", 
+		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/Netatmo_75.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -39,7 +34,7 @@
 				} 
 			]
 		},
-		{ 	"img": "Netatmo_100.png", 
+		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/Netatmo_100.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
