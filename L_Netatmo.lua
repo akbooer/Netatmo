@@ -1,14 +1,12 @@
-module ("L_Netatmo", package.seeall)
-
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2019.12.16",
+  VERSION       = "2020.01.09",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
   COPYRIGHT     = "(c) 2013-2019 AKBooer",
   DOCUMENTATION = "https://github.com/akbooer/Netatmo/tree/master/",
   LICENSE       = [[
-  Copyright 2013-2019 AK Booer
+  Copyright 2013-2020 AK Booer
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -74,6 +72,8 @@ ABOUT = {
 
 -- 2019.01.30   move HTTP handler startup to earlier in init code (debug info available)
 -- 2019.12.16   fix error in D_NetatmoMetric.xml, update .json file to point to CDN for online icons
+
+-- 2020.01.09   update D_Netatmo.json to use CDN
 
 
 local https 	= require "ssl.https"
