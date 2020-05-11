@@ -1,9 +1,9 @@
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2020.01.09",
+  VERSION       = "2020.05.11",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
-  COPYRIGHT     = "(c) 2013-2019 AKBooer",
+  COPYRIGHT     = "(c) 2013-2020 AKBooer",
   DOCUMENTATION = "https://github.com/akbooer/Netatmo/tree/master/",
   LICENSE       = [[
   Copyright 2013-2020 AK Booer
@@ -74,6 +74,7 @@ ABOUT = {
 -- 2019.12.16   fix error in D_NetatmoMetric.xml, update .json file to point to CDN for online icons
 
 -- 2020.01.09   update D_Netatmo.json to use CDN
+-- 2020.05.11   quick fix to create 'missing' devices (not found in current modules)
 
 
 local https 	= require "ssl.https"
@@ -781,6 +782,18 @@ end
 -- Initialisation 
 --
 
+-- find current family, device No, indexed by altid
+local function existing_children ()
+  local parent = NetatmoID
+  local family = {}
+  for i,d in pairs(luup.devices) do
+    if d.device_num_parent == parent then
+      family[d.id] = i
+    end
+  end
+  return family
+end
+
 -- set up child devices with appropriate device files
 local function create_children (stations, childSensors)
   local ID = childID ()											-- access child ID name utilities
@@ -790,6 +803,8 @@ local function create_children (stations, childSensors)
     if sensor then makeChild[sensor] = true end
   end
 
+  local family = existing_children ()
+  
   local child_devices = luup.chdev.start(NetatmoID);				-- create child devices...
   for _, s in pairs (stations) do
     for module, m in pairs (s) do
@@ -802,6 +817,7 @@ local function create_children (stations, childSensors)
 
       for sensor in pairs (m.measurements) do   
         local child = ID.name (m.moduleId or m.deviceId, sensor)
+        family[child] = nil               -- remove from current list
         if makeChild[sensor] or adopt[sensor] then			 -- only create or adopt children for required sensor types
           luup.chdev.append(
             NetatmoID,  								   -- parent (this device)
@@ -817,6 +833,25 @@ local function create_children (stations, childSensors)
       end
     end
   end 
+  
+  -- 2020.05.11 create 'missing' devices
+  for child, devNo in pairs(family) do
+    local missing = "device '[%d]%s' not found in current list of modules"
+    local d = luup.devices[devNo]
+    local dtype = d.device_type
+    dtype = (dtype:match "Temperature" and T) or (dtype:match "Humidity" and T) or 'X'
+    log (missing: format (devNo, d.description))
+    luup.chdev.append(
+      NetatmoID,  								   -- parent (this device)
+      child_devices, 								 -- pointer from above "start" call
+      child,										     -- child ID
+      d.description,				         -- child device description 
+      "", 										       -- serviceId defined in device file
+      LuupInfo[dtype].deviceXML,    -- device file
+      "",											       -- no implementation file required
+      "",											       -- no parameters to set 
+      false)										     -- not embedded child devices (can go in any room)
+  end
 
   luup.chdev.sync(NetatmoID, child_devices)	-- any changes in configuration will cause a restart at this point
 
