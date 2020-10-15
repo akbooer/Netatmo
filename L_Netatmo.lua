@@ -1,6 +1,8 @@
+--module ("L_Netatmo", package.seeall)   -- for debug only
+
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2020.05.11",
+  VERSION       = "2020.10.15",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
   COPYRIGHT     = "(c) 2013-2020 AKBooer",
@@ -75,6 +77,8 @@ ABOUT = {
 
 -- 2020.01.09   update D_Netatmo.json to use CDN
 -- 2020.05.11   quick fix to create 'missing' devices (not found in current modules)
+
+-- 2020.10.15   fix possibly missing "station_name" / "home_name" (thanks @Krisztian_Szabo)
 
 
 local https 	= require "ssl.https"
@@ -461,10 +465,12 @@ end
 local function station_data (info)
   local stations = {}
   local stationName = {}		-- lookup table for _id --> name translation
-  for _,d in ipairs (info.devices) do	-- go through the devices
-    stationName[d._id] = d.station_name
+  for i,d in ipairs (info.devices) do	-- go through the devices
+    local station_name = d.station_name or d.home_name or ("STATION_" .. i)
+    d.station_name = station_name       -- 2020.10.15  fix missing station name
+    stationName[d._id] = station_name
     log ("station name: " .. (d.station_name or '?'))
-    stations [d.station_name] = {[d.module_name] = 
+    stations[station_name] = {[d.module_name] = 
       {deviceId = d._id, measurements = build_measurements (d)} }  		-- base device has no module _id
     log ("module name: " .. (d.module_name or '?'))
 
