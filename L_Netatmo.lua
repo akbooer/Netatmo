@@ -1,5 +1,29 @@
+--module ("L_Netatmo", package.seeall)   -- for debug only
 
-local version = "2016.01.26  @akbooer"   
+ABOUT = {
+  NAME          = "Netatmo",
+  VERSION       = "2020.10.15",
+  DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
+  AUTHOR        = "@akbooer",
+  COPYRIGHT     = "(c) 2013-2020 AKBooer",
+  DOCUMENTATION = "https://github.com/akbooer/Netatmo/tree/master/",
+  LICENSE       = [[
+  Copyright 2013-2020 AK Booer
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+]]
+}
+
 
 ------------------------------------------------------------------------
 --
@@ -7,7 +31,7 @@ local version = "2016.01.26  @akbooer"
 --
 -- Virtual sensors for all your Netatmo Weather Station devices and modules (
 -- temperature, humidity, pressure, CO2, noise & rainfall.)  
--- @akbooer 2013-2016
+-- @akbooer 2013-2017
 -- 
 -- inspired by the excellent web tutorial by Sébastien Joly "Collecter les données d'une station Netatmo":
 -- http://www.domotique-info.fr/2013/05/collecter-les-donnees-dune-station-netatmo-depuis-une-vera-tuto/
@@ -43,7 +67,20 @@ local version = "2016.01.26  @akbooer"
 --              see: http://forum.micasaverde.com/index.php/topic,35162.msg266522.html#msg266522
 --
 
---local socket =  require "socket"
+-- 2017.01.16   fix icon name typo in setMetricIcon, thanks @reneboer
+-- 2017.02.14   fix nil value error in format
+
+-- 2018.02.27   add ABOUT global with VERSION for openLuup Plugins page
+
+-- 2019.01.30   move HTTP handler startup to earlier in init code (debug info available)
+-- 2019.12.16   fix error in D_NetatmoMetric.xml, update .json file to point to CDN for online icons
+
+-- 2020.01.09   update D_Netatmo.json to use CDN
+-- 2020.05.11   quick fix to create 'missing' devices (not found in current modules)
+
+-- 2020.10.15   fix possibly missing "station_name" / "home_name" (thanks @Krisztian_Szabo)
+
+
 local https 	= require "ssl.https"
 local library	= require "L_Netatmo2"
 
@@ -183,7 +220,7 @@ end
 -- corresponding to files NetatmoMetric_0.png, ... NetatmoMetric_250.png
 -- to make it work on UI5 and UI7
 local function setMetricIcon (value, device)
-  local icons = {T, H, C, P, N, R, W, "CO2_low", "CO2_mid", "CO2_high"}
+  local icons = {T, H, C, P, N, R, W, "CO2_low", "CO2_med", "CO2_high"}
   local index = {generic = 0}
   for i,n in ipairs (icons) do index[n] = i end
   set (iconsVariable, index[value] or 0, nil, device)
@@ -283,7 +320,7 @@ local function Metrics (admin)
     local conversion = units[type_of_metric[sensor] or '']
     if conversion then
       localUnit  = conversion.unit 	    -- unit converted to local preference
-      value = value * conversion.m + conversion.c + (offset or 0)	-- apply units conversion
+      value = (value or 0) * conversion.m + conversion.c + (offset or 0)	-- apply units conversion + 2017.02.14
       value = ("%0."..conversion.dp.."f"): format (value)		      -- specify precision for readings
     end
     return value, localUnit 
@@ -411,7 +448,7 @@ end  -- netatmoAPI module
 -- build the measurements list from the device/module dashboard_data
 local function build_measurements (m)
   local x = {Battery= m.battery_percent}        -- throw in the battery level for good measure
-  for name,value in pairs (m.dashboard_data) do
+  for name,value in pairs (m.dashboard_data or {}) do   -- 2019.01.30  TODO: avoid nil pointer... but WHY?
     -- remove underscores and change to CamelCase
     local Name = name: gsub ("_(%w)", string.upper): gsub ("^%w", string.upper) 
     if type (value) ~= "table" then x[Name] = value end   -- ignore table structures
@@ -428,10 +465,12 @@ end
 local function station_data (info)
   local stations = {}
   local stationName = {}		-- lookup table for _id --> name translation
-  for _,d in ipairs (info.devices) do	-- go through the devices
-    stationName[d._id] = d.station_name
+  for i,d in ipairs (info.devices) do	-- go through the devices
+    local station_name = d.station_name or d.home_name or ("STATION_" .. i)
+    d.station_name = station_name       -- 2020.10.15  fix missing station name
+    stationName[d._id] = station_name
     log ("station name: " .. (d.station_name or '?'))
-    stations [d.station_name] = {[d.module_name] = 
+    stations[station_name] = {[d.module_name] = 
       {deviceId = d._id, measurements = build_measurements (d)} }  		-- base device has no module _id
     log ("module name: " .. (d.module_name or '?'))
 
@@ -749,15 +788,29 @@ end
 -- Initialisation 
 --
 
+-- find current family, device No, indexed by altid
+local function existing_children ()
+  local parent = NetatmoID
+  local family = {}
+  for i,d in pairs(luup.devices) do
+    if d.device_num_parent == parent then
+      family[d.id] = i
+    end
+  end
+  return family
+end
+
 -- set up child devices with appropriate device files
 local function create_children (stations, childSensors)
   local ID = childID ()											-- access child ID name utilities
   local makeChild = {}											-- table of sensors for which to create child devices
-  for c in childSensors:gmatch "%w" do			-- looking for individual (upercase) letters...
+  for c in childSensors:gmatch "%w" do			-- looking for individual (uppercase) letters...
     local sensor = THCPNRW[c] 
     if sensor then makeChild[sensor] = true end
   end
 
+  local family = existing_children ()
+  
   local child_devices = luup.chdev.start(NetatmoID);				-- create child devices...
   for _, s in pairs (stations) do
     for module, m in pairs (s) do
@@ -770,6 +823,7 @@ local function create_children (stations, childSensors)
 
       for sensor in pairs (m.measurements) do   
         local child = ID.name (m.moduleId or m.deviceId, sensor)
+        family[child] = nil               -- remove from current list
         if makeChild[sensor] or adopt[sensor] then			 -- only create or adopt children for required sensor types
           luup.chdev.append(
             NetatmoID,  								   -- parent (this device)
@@ -785,6 +839,25 @@ local function create_children (stations, childSensors)
       end
     end
   end 
+  
+  -- 2020.05.11 create 'missing' devices
+  for child, devNo in pairs(family) do
+    local missing = "device '[%d]%s' not found in current list of modules"
+    local d = luup.devices[devNo]
+    local dtype = d.device_type
+    dtype = (dtype:match "Temperature" and T) or (dtype:match "Humidity" and T) or 'X'
+    log (missing: format (devNo, d.description))
+    luup.chdev.append(
+      NetatmoID,  								   -- parent (this device)
+      child_devices, 								 -- pointer from above "start" call
+      child,										     -- child ID
+      d.description,				         -- child device description 
+      "", 										       -- serviceId defined in device file
+      LuupInfo[dtype].deviceXML,    -- device file
+      "",											       -- no implementation file required
+      "",											       -- no parameters to set 
+      false)										     -- not embedded child devices (can go in any room)
+  end
 
   luup.chdev.sync(NetatmoID, child_devices)	-- any changes in configuration will cause a restart at this point
 
@@ -817,7 +890,7 @@ end
 -- init () called on startup
 function init  (lul_device)	
   NetatmoID = lul_device			-- save the global device ID
-  set ('Version', version)		-- save code version number in UI variable
+  set ('Version', ABOUT.VERSION)		-- save code version number in UI variable
 
   -- Get user-defined info, creating the variables in the UI with defaults if required
 
@@ -863,6 +936,8 @@ function init  (lul_device)
     return false, "Failed to get stations data", "Netatmo" 
   end
 
+  luup.register_handler ("HTTP_Netatmo", "Netatmo") -- HTTP request handler (2019.01.30  moved earlier in code)
+
   metric = Metrics (info.user.administrative)     -- set up metric unit conversions, etc.
 -- TODO: FOR TESTING ONLY: override units
 -- unit (temperature, rain): 0 -> metric system, 1 -> imperial system 
@@ -872,7 +947,7 @@ function init  (lul_device)
 --
   stationInfo = station_data (info)				   -- create useful table with device configuration
   context = {NetatmoConfig = info, StationInfo = stationInfo}
-  context.VERSION = version
+  context.VERSION = ABOUT.VERSION
 
   log 'creating child devices...'
   create_children (stationInfo, childSensors)     -- child device structure for Netatmo modules and sensors
@@ -880,8 +955,6 @@ function init  (lul_device)
 
   luup.call_delay ('refreshNetatmo', 10, "")			 -- periodic refresh of access tokens
   luup.call_delay ('pollNetatmo', 20, "")				   -- periodic poll of measurements
-
-  luup.register_handler ("HTTP_Netatmo", "Netatmo") -- HTTP request handler
 
   set_failure (0)
   setNetatmoIcon "clear"       -- clear icon after successful initialization

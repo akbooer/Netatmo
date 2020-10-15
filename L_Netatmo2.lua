@@ -108,7 +108,10 @@ end
 
 function gviz ()
 
-version = "2014.04.30  @akbooer"
+
+-- 2016.07.01   Google Charts API changes broke old code!
+
+local version = "2016.07.01  @akbooer"
 
 local key
 local quote, equote, nowt = "'", '', 'null' 
@@ -232,29 +235,30 @@ local function ChartWrapper (this)
     head = head or ''
     extras = extras or ''
     local html = JavaScript {[[
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-        <script type="text/javascript">
-          google.load('visualization','1');
-          google.setOnLoadCallback(gViz);
-          function gViz() {
-              var w = new google.visualization.ChartWrapper(]], toJScr (opts), [[);
-              var data = new google.visualization.DataTable(]], this.dataTable.toJScr, [[);
-              w.setDataTable(data);
-              w.draw();]],
-              extras, [[
-            }
-        </script>
-       ]], head, [[
-      </head>
-      <body>]],
-        body,
-      [[</body>
-    </html>
-    ]]}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart', 'table', 'treemap', 'orgchart']});
+      google.setOnLoadCallback(gViz);
+      function gViz() {
+          var w = new google.visualization.ChartWrapper(]], toJScr (opts), [[);
+          var data = new google.visualization.DataTable(]], this.dataTable.toJScr, [[);
+          w.setDataTable(data);
+          w.draw();]],
+          extras, [[
+        }
+    </script>
+   ]], head, [[
+  </head>
+  <body>]],
+    body,
+  [[</body>
+</html>
+]]}
     t = (os.clock() - t) * 1e3
     if luup then luup.log (
       ("visualization: %s(%dx%d) %dkB in %dmS"): format (this.chartType,  

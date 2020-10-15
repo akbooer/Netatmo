@@ -1,8 +1,8 @@
 {
-	"default_icon": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric.png",
-    "flashicon":  "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric.png",
+	"default_icon": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric.png",
+    "flashicon":  "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric.png",
     "state_icons":[
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_0.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_0.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -10,7 +10,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_25.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_25.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -18,7 +18,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_50.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_50.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -26,7 +26,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_75.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_75.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -34,7 +34,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_100.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_100.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -42,7 +42,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_125.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_125.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -50,7 +50,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_150.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_150.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -58,7 +58,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_175.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_175.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -66,7 +66,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_200.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_200.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -74,7 +74,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_225.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_225.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
@@ -82,7 +82,7 @@
 				} 
 			]
 		},
-		{ 	"img": "http:\/\/raw.githubusercontent.com\/akbooer\/Netatmo\/master\/icons\/NetatmoMetric_250.png", 
+		{ 	"img": "https://cdn.jsdelivr.net/gh/akbooer/Netatmo/icons/NetatmoMetric_250.png", 
 			"conditions": [ 
 				{ 	"service": "urn:akbooer-com:serviceId:Netatmo1", 
 					"variable": "IconSet", 
