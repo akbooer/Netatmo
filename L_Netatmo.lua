@@ -2,7 +2,7 @@
 
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2020.10.15",
+  VERSION       = "2020.10.21",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
   COPYRIGHT     = "(c) 2013-2020 AKBooer",
@@ -79,12 +79,12 @@ ABOUT = {
 -- 2020.05.11   quick fix to create 'missing' devices (not found in current modules)
 
 -- 2020.10.15   fix possibly missing "station_name" / "home_name" (thanks @Krisztian_Szabo)
-
+-- 2020.10.21   another fix for the above (with multiple stations) (thanks again @Krisztian_Szabo)
+--              remove CLI library
 
 local https 	= require "ssl.https"
 local library	= require "L_Netatmo2"
 
-local cli   	= library.cli()
 local gviz  	= library.gviz()
 local json  	= library.json() 
 
@@ -466,7 +466,8 @@ local function station_data (info)
   local stations = {}
   local stationName = {}		-- lookup table for _id --> name translation
   for i,d in ipairs (info.devices) do	-- go through the devices
-    local station_name = d.station_name or d.home_name or ("STATION_" .. i)
+    local station_name = d.station_name 
+      or table.concat {(d.home_name or "STATION" ), '_', i}
     d.station_name = station_name       -- 2020.10.15  fix missing station name
     stationName[d._id] = station_name
     log ("station name: " .. (d.station_name or '?'))
@@ -510,7 +511,7 @@ end
 --org chart
 local function orgChart (p)		-- a different visualization of the station / module / sensor structure
   local d = gviz.DataTable ()
-  local root = "Vera / Netatmo<br><br>Last Update "..Timestamp
+  local root = "Vera / Netatmo<br><br>Last Update ".. (Timestamp or '0')
   d.addColumn ("string", "Item")
   d.addColumn ("string", "Parent")
   d.addColumn ("string", "ToolTip")
@@ -533,7 +534,7 @@ local function orgChart (p)		-- a different visualization of the station / modul
       end
     end
   end
-  local options = {allowHtml = true, width = p.options.width}
+  local options = {allowHtml = true, width = p.width}
   local chart = gviz.Chart "OrgChart"
   return chart.draw (d, options)
 end
@@ -554,7 +555,7 @@ local function list_Devices (p)
   d.addColumn ("number", "Local Value")
   d.addColumn ("string", "Local Units")
   mapSensors (buildRow)
-  local options = {allowHtml = true, height= p.options.height or 700, width = p.options.width}
+  local options = {allowHtml = true, height= p.height or 700, width = p.width}
   local chart = gviz.Table ()
   return chart.draw (d, options)
 end
@@ -581,12 +582,12 @@ end
 -- HTTP request handler
 _G.HTTP_Netatmo = function (_, lul_parameters)
   local function exec ()
-    local p, status = cli.parse (lul_parameters)
-    local html = status
+    local p = lul_parameters.page
+    local html = "no such page"
     if p then
-      local reportType = p.actions.report
+      local reportType = p
       if reportType 
-      then html = ({list = list_Devices, organization = orgChart, diagnostics = diagnostics}) [reportType] (p) 
+      then html = ({list = list_Devices, organization = orgChart, diagnostics = diagnostics}) [reportType] (lul_parameters) 
       end
     end
     return html
@@ -743,7 +744,7 @@ local function updateLuupVariables (stations)
   end
 
   -- parent timestamp udate
-  Timestamp = os.date (timeFormat)
+  Timestamp = os.date (timeFormat) or '0'
   set ('Timestamp', Timestamp )		             -- say when this happened
   set ('DisplayLine1', Timestamp, altuiSID)     -- make it work in ALTUI too !
 end
@@ -905,14 +906,6 @@ function init  (lul_device)
 
   timeFormat			= uiVar ("TimeFormat",		"%a %H:%M")	
   local childSensors		= uiVar ("ChildSensors",	"THCPNRW")			-- create children for these sensor types
-
-  cli = cli.parser "&report=org"
-
-  cli.parameter ("actions", "report", {"report", "show", "page"}, {"list","organization","diagnostics"}, "show device status, configuration, or diagnostics")
---	cli.parameter ("actions", "plot", "plot", "string", "plot specified sensor")
---
-  cli.parameter ("options",    "width",     "width",   "number",    "HTML output width")
-
 
   -- create Netatmo object
   log "Netatmo initialisation..."

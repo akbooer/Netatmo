@@ -5,100 +5,9 @@ module ("L_Netatmo2", package.seeall)
 -- Netatmo2 - supplementary modules
 --
 
-------
---
--- Command Line Interface parser - for HTTP request handlers
---
--- Given GROUPS of command NAMES and their command line ALIASES and VALUES,
--- parse the input to generate a RESULT table with GROUPS tables containing validated NAME / VALUE pairs.
--- If there is an error return nil and a useful diagnostic STATUS message.
--- An auto-generated HELP message is available, along with an EXAMPLE line if given to the parse instance.
---
 
-function cli()
+-- 2020.10.21  remove CLI modules, update gViz to latest Google Charts API loader
 
-local function parser (example)
-	
-	local version = "2013.12.19  @akbooer"
-
-	local allowOther = true		-- set to true to suppress error for unknown parameters (which end up in "other" category)
-	local index  = {}			-- index of parameters, keyed by full name
-	local syntax = {}			-- syntax structure
-	local lookup = {}			-- maps parameter aliases to full names
-	
-	local function parameter (group, name, aliases, value, help)
-		local function aliasSet (names, set)					-- create table of truncated aliases which all point to their full name
-			local set = set or {}								-- concatenate with given table. if present
-			for _,name in ipairs (names) do
-				for i = 1,#name do 								-- one or more letters
-					local subset = name:sub(1,i)
-					set[subset] = set[subset] or name 			-- don't overwrite previous definition
-				end
-			end
-			return set
-		end
-		local set
-		if type (aliases) == "string" then aliases = {aliases} end
-		if type (value) == "table" then set = aliasSet (value) end
-		local param = {group = group, name = name, cmds = aliases, vals = value, set = set, help = help}
-		syntax[group] = syntax[group] or {}							-- may be a new group
-		syntax[group][name] = param
-		lookup = aliasSet (aliases, lookup)							-- add these parameter name aliases to all the rest
-		for _,alias in ipairs (aliases) do index[alias] = param end
-	end	
-		
-	local function help ()
-		local intro = "PARAMETERS: names and values can be abbreviated"
-		local t = {intro}
-		local function p(x) t[#t+1]=x end
-		for class, params in pairs (syntax) do
-			p (("\n  [%s]"): format (class))
-			for _,b in pairs (params) do
-				local val = b.vals
-				if type (val) == "table" then val = table.concat (val, '/') end
-				p (("%20s = %s [%s]"): format (table.concat (b.cmds, '/'), b.help, val))
-			end
-		end
-		p ''; 
-		if example then p ("EXAMPLE: ".. example) end
-		return table.concat (t, '\n')
-	end
-	
-	local function parse (lul_parameters)
-		local result = {}
-		local status = "ok"
-		local empty = true
-		local function fail (text) result = nil; status = text end
-		for group in pairs (syntax) do result[group] = {} end					-- create the output groups
-		for param, value in pairs(lul_parameters) do
-			empty = false
-			local fullName = lookup[param]
-			local finalValue = value
-			if fullName then 
-				local cmd = index[fullName]
-				if cmd.set then finalValue = cmd.set[value] end		
-				if cmd.vals == "number" then finalValue = tonumber (value) end	-- convert numeric value 
-				if not finalValue then											-- value must be in allowed list
-					fail (("invalid value '%s' for parameter '%s'"): format (value, fullName) )
-					break 
-				end
-				result[cmd.group][cmd.name] = finalValue
-			elseif allowOther then									-- collect 'other' pararameters, or...
-				result.other = result.other or {}
-				result.other[param] = value
-			else													-- ...flag as error
-				fail ("unknown parameter: "..param)
-				break
-			end
-		end
-		if empty then fail (help()) end								-- return help text if no parameters
-		return result, status
-	end
-	return {parameter = parameter, help = help, parse = parse, version = version, allowOther = allowOther}
-end
-
-return {parser = parser}
-end
 
 ----------
 --
@@ -234,16 +143,16 @@ local function ChartWrapper (this)
     body = body or table.concat {'<div id="', id, '"></div>'}
     head = head or ''
     extras = extras or ''
+    -- 2020.10.21 loader updates
     local html = JavaScript {[[
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-      google.charts.load('current', {'packages':['corechart', 'table', 'treemap', 'orgchart']});
-      google.setOnLoadCallback(gViz);
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script>
+      google.charts.load('current', {packages: ['corechart', 'table', 'treemap', 'orgchart']});
+      google.charts.setOnLoadCallback(gViz);
       function gViz() {
           var w = new google.visualization.ChartWrapper(]], toJScr (opts), [[);
           var data = new google.visualization.DataTable(]], this.dataTable.toJScr, [[);
