@@ -2,7 +2,7 @@
 
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2020.10.15",
+  VERSION       = "2022.12.28",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
   COPYRIGHT     = "(c) 2013-2020 AKBooer",
@@ -21,6 +21,15 @@ ABOUT = {
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
+  
+  RB: 
+  Changed to use token from dev.netatmo.com instead of username/pwd
+  Goto dev.netatmo.com MyApps and select your app used for Vera/openLuup
+  Choose scope read_station and click Generate Token
+  Put the Access token in the Username and Refresh Token in Password, reload Luup.
+  
+  Need to how it goes on a restart after tokens got refreshed.
+  
 ]]
 }
 
@@ -33,7 +42,7 @@ ABOUT = {
 -- temperature, humidity, pressure, CO2, noise & rainfall.)  
 -- @akbooer 2013-2017
 -- 
--- inspired by the excellent web tutorial by SÃ©bastien Joly "Collecter les donnÃ©es d'une station Netatmo":
+-- inspired by the excellent web tutorial by Sébastien Joly "Collecter les données d'une station Netatmo":
 -- http://www.domotique-info.fr/2013/05/collecter-les-donnees-dune-station-netatmo-depuis-une-vera-tuto/
 --
 -- June 2014 - refactored to use updated API
@@ -262,8 +271,8 @@ local function Metrics (admin)
 
   local unitsLookup = {	-- these indices correspond to the Netatmo configuration settings values
     [T] =	{
-      [0] = UnitsTable ('Â°C', 1),
-      [1] = UnitsTable ('Â°F', 1, 9/5, 32)
+      [0] = UnitsTable ('°C', 1),
+      [1] = UnitsTable ('°F', 1, 9/5, 32)
     },
     [P] = {
       [0] = UnitsTable ('mbar', 1),
@@ -378,6 +387,8 @@ local function netatmoAPI (client_id, client_secret)
 
   local function authenticate (username, password, scope)
     scope = scope or "read_station"
+--[[
+	Do not authenticate, we get tokens from web site.
     local reply = HTTPS_request ("https://api.netatmo.net/oauth2/token",	
       {
         grant_type    = "password",
@@ -388,6 +399,9 @@ local function netatmoAPI (client_id, client_secret)
         scope         = scope,
         } )
     access_token, refresh_token = reply.access_token, reply.refresh_token
+]]
+	
+    access_token, refresh_token = username, password
     return access_token ~= nil
   end
 
@@ -401,6 +415,9 @@ local function netatmoAPI (client_id, client_secret)
         } )
     if reply.refresh_token then     -- only rotate if valid, else retry next time
       access_token, refresh_token = reply.access_token, reply.refresh_token
+	  -- Update the tokens as uid and pwd.
+	  set ('Username', access_token )	
+	  set ('Password', refresh_token )	
     end
     return reply.refresh_token ~= nil
   end
@@ -698,7 +715,7 @@ local function update_child (child, sensor, metrics)
 
       local v = setChildVariable "WindAngle"
       setChildVariable "MaxWindAngle"
-      set ("DisplayLine2", (v or '?') .. 'Â°', altuiSID, child.deviceNo)    -- ALTUI compatibility!!
+      set ("DisplayLine2", (v or '?') .. '°', altuiSID, child.deviceNo)    -- ALTUI compatibility!!
     end
   end
 
