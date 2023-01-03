@@ -80,7 +80,7 @@
 					"left": "0",
 					"Label": {
 						"lang_tag": "timestamp",
-						"text": "Last Update"
+						"text": "Last Update:"
 					},
 					"Display": {
 						"Top": 60,
@@ -98,7 +98,7 @@
 						"Service": "urn:akbooer-com:serviceId:Netatmo1",
 						"Variable": "Timestamp",
 						"Top": 60,
-						"Left": 200,
+						"Left": 150,
 						"Width": 75,
 						"Height": 20
 					}
@@ -109,30 +109,32 @@
 					"top": "4",
 					"left": "0",
 					"Label": {
-						"lang_tag": "memused",
-						"text": "App Memory Used (kB)"
+						"lang_tag": "cred",
+						"text": "Grant plugin access to your weather station data:"
 					},
 					"Display": {
-						"Top": 80,
+						"Top": 100,
+						"Left": 50,
+						"Width": 75,
+						"Height": 20
+					}
+				},
+				{
+					"ControlGroup":"2",
+					"ControlType": "label",
+					"top": "4",
+					"left": "0",
+					"Label": {
+						"lang_tag": "auth_button",
+						"text": "<form method='get' target='_blank' action='https://api.netatmo.com/oauth2/authorize'> <input type='hidden' name='client_id' value='5200dfd21977593427000024'/> <input type='hidden' name='scope' value='read_station'/> <input type='hidden' name='state' value='42'/> <input type='submit' value='Authorize'/> </form>"
+					},
+					"Display": {
+						"Top": 130,
 						"Left": 50,
 						"Width": 75,
 						"Height": 20
 					}
 				},  
-				{
-					"ControlGroup":"2",
-					"ControlType": "variable",
-					"top": "5",
-					"left": "0",
-					"Display": {
-						"Service": "urn:akbooer-com:serviceId:Netatmo1",
-						"Variable": "AppMemoryUsed",
-						"Top": 80,
-						"Left": 200,
-						"Width": 75,
-						"Height": 20
-					}
-				},
 				{
 					"ControlGroup": "2",
 					"ControlType": "label",

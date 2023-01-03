@@ -2,13 +2,13 @@
 
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2022.12.28",
+  VERSION       = "2023.01.04",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
-  COPYRIGHT     = "(c) 2013-2020 AKBooer",
+  COPYRIGHT     = "(c) 2013-2023 AKBooer",
   DOCUMENTATION = "https://github.com/akbooer/Netatmo/tree/master/",
   LICENSE       = [[
-  Copyright 2013-2020 AK Booer
+  Copyright 2013-2023 AK Booer
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -21,15 +21,6 @@ ABOUT = {
   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   See the License for the specific language governing permissions and
   limitations under the License.
-  
-  RB: 
-  Changed to use token from dev.netatmo.com instead of username/pwd
-  Goto dev.netatmo.com MyApps and select your app used for Vera/openLuup
-  Choose scope read_station and click Generate Token
-  Put the Access token in the Username and Refresh Token in Password, reload Luup.
-  
-  Need to how it goes on a restart after tokens got refreshed.
-  
 ]]
 }
 
@@ -40,14 +31,15 @@ ABOUT = {
 --
 -- Virtual sensors for all your Netatmo Weather Station devices and modules (
 -- temperature, humidity, pressure, CO2, noise & rainfall.)  
--- @akbooer 2013-2017
+-- @akbooer 2013-2017/...
 -- 
--- inspired by the excellent web tutorial by Sébastien Joly "Collecter les données d'une station Netatmo":
+-- inspired by the excellent web tutorial by SÃ©bastien Joly "Collecter les donnÃ©es d'une station Netatmo":
 -- http://www.domotique-info.fr/2013/05/collecter-les-donnees-dune-station-netatmo-depuis-une-vera-tuto/
 --
 -- June 2014 - refactored to use updated API
 -- special thanks to @Kullematz for fast-turnaround beta testing.
--- and to @reneboer for fixing the UI7 "Can't Detect Device" error, http://forum.micasaverde.com/index.php/topic,16276.msg203653.html#msg203653
+-- and to @reneboer for fixing the UI7 "Can't Detect Device" error,
+-- see: http://forum.micasaverde.com/index.php/topic,16276.msg203653.html#msg203653
 -- AND for fixing the UI7 .json files http://forum.micasaverde.com/index.php/topic,16276.msg203683.html#msg203683
 
 ------------------------------------------------------------------------
@@ -88,14 +80,24 @@ ABOUT = {
 -- 2020.05.11   quick fix to create 'missing' devices (not found in current modules)
 
 -- 2020.10.15   fix possibly missing "station_name" / "home_name" (thanks @Krisztian_Szabo)
+-- 2020.10.21   another fix for the above (with multiple stations) (thanks again @Krisztian_Szabo)
+--              remove CLI library
+
+-- 2021.04.20   use openLuup.json, if present (it may use Cjson or RapidJSON)
+
+-- 2022.12.30   changes due to deprecated Oath2 Client Credentials username/password login (thanks @mrFarmer aka @reneboer)
+--              see: https://smarthome.community/topic/993/netatmo-oath2-login/20
+
+-- 2023.01.04   Use Oath2 Token Authorization - no need for individual user-created app on Netatmo site
 
 
 local https 	= require "ssl.https"
 local library	= require "L_Netatmo2"
 
-local cli   	= library.cli()
-local gviz  	= library.gviz()
-local json  	= library.json() 
+local is_openLuup, json = pcall (require, "openLuup.json")
+if not is_openLuup then json = library.json() end
+
+local gviz = library.gviz()
 
 local Netatmo		      -- Netatmo API object with access methods
 local Timestamp		    -- last update
@@ -163,11 +165,12 @@ local context = {}        -- for debugging, etc.
 local ChildDevice = {}    -- lookup table: ChildDevice [ChildId] = ChildObject
 local metric              -- metric handling utilities
 
+local tokenRefresh = 120	 -- interval (in minutes) in which to refresh access tokens
+
 ---	
 -- 'global' program variables assigned in init()
 
 local NetatmoID						  -- Luup device ID
-local tokenRefresh					-- interval (in minutes) in which to refresh access tokens
 local measurementPoll				-- polling frequency (in minutes) for measurement update
 local timeFormat					  -- os.date() compatible format string for timestamp
 
@@ -271,8 +274,8 @@ local function Metrics (admin)
 
   local unitsLookup = {	-- these indices correspond to the Netatmo configuration settings values
     [T] =	{
-      [0] = UnitsTable ('°C', 1),
-      [1] = UnitsTable ('°F', 1, 9/5, 32)
+      [0] = UnitsTable ('Â°C', 1),
+      [1] = UnitsTable ('Â°F', 1, 9/5, 32)
     },
     [P] = {
       [0] = UnitsTable ('mbar', 1),
@@ -375,9 +378,12 @@ local function netatmoAPI (client_id, client_secret)
       end	-- build the parameter string
       req = table.concat (req,'&')	
     end
-    local reply,code = https.request (url, req)		-- body, code, headers, status
+    local reply,code, headers = https.request (url, req)		-- body, code, headers, status
     if code ~= 200 then
       log ('HTTPS error = ' .. (code or 'nil'))
+--      log (json.encode {request = req})
+--      log (json.encode {headers = headers})
+--      log (json.encode {reply = reply or "---none---"})
       Json = {}
     else
       Json = json.decode (reply)
@@ -385,10 +391,9 @@ local function netatmoAPI (client_id, client_secret)
     return Json
   end
 
+  -- authenticate with username/password (deprecated as of October 2022)
   local function authenticate (username, password, scope)
     scope = scope or "read_station"
---[[
-	Do not authenticate, we get tokens from web site.
     local reply = HTTPS_request ("https://api.netatmo.net/oauth2/token",	
       {
         grant_type    = "password",
@@ -399,27 +404,37 @@ local function netatmoAPI (client_id, client_secret)
         scope         = scope,
         } )
     access_token, refresh_token = reply.access_token, reply.refresh_token
-]]
-	
-    access_token, refresh_token = username, password
     return access_token ~= nil
   end
 
-  local function refresh_tokens ()
+  -- retrieve token using authorization code
+  local function retrieve_token_using_code (code, scope)
+    scope = scope or "read_station"
+    local reply = HTTPS_request ("https://api.netatmo.net/oauth2/token",	
+      {
+        grant_type    = "authorization_code",
+        client_id     = client_id,
+        client_secret = client_secret,
+        code = code,
+        redirect_uri = "http://127.0.0.1:3480/data_request?id=lr_Netatmo",
+        scope = scope,
+        } )
+    access_token, refresh_token = reply.access_token, reply.refresh_token -- , reply.expires_in
+    return reply.refresh_token          -- need to return this to store externally
+  end
+  
+  local function refresh_tokens (refresh)
     local reply = HTTPS_request ("https://api.netatmo.net/oauth2/token",	
       {
         grant_type    = "refresh_token",
         client_id     = client_id,
         client_secret = client_secret,
-        refresh_token = refresh_token
+        refresh_token = refresh or refresh_token,
         } )
     if reply.refresh_token then     -- only rotate if valid, else retry next time
       access_token, refresh_token = reply.access_token, reply.refresh_token
-	  -- Update the tokens as uid and pwd.
-	  set ('Username', access_token )	
-	  set ('Password', refresh_token )	
     end
-    return reply.refresh_token ~= nil
+    return reply.refresh_token          -- need to return this to store externally
   end
 
   local function get_stationsdata ()
@@ -447,7 +462,10 @@ local function netatmoAPI (client_id, client_secret)
   end
 
   return {  --  methods
-    authenticate 		  = authenticate, 
+    
+    retrieve_token_using_code = retrieve_token_using_code,
+    
+    authenticate 		  = authenticate,       -- deprecated
     refresh_tokens 		= refresh_tokens, 
     get_measurements 	= get_measurements, --  NOT NEEDED (in this plugin) WITH NEW API getstationsdata
     get_stationsdata = get_stationsdata,
@@ -483,7 +501,8 @@ local function station_data (info)
   local stations = {}
   local stationName = {}		-- lookup table for _id --> name translation
   for i,d in ipairs (info.devices) do	-- go through the devices
-    local station_name = d.station_name or d.home_name or ("STATION_" .. i)
+    local station_name = d.station_name 
+      or table.concat {(d.home_name or "STATION" ), '_', i}
     d.station_name = station_name       -- 2020.10.15  fix missing station name
     stationName[d._id] = station_name
     log ("station name: " .. (d.station_name or '?'))
@@ -527,7 +546,7 @@ end
 --org chart
 local function orgChart (p)		-- a different visualization of the station / module / sensor structure
   local d = gviz.DataTable ()
-  local root = "Vera / Netatmo<br><br>Last Update "..Timestamp
+  local root = "Vera / Netatmo<br><br>Last Update ".. (Timestamp or '0')
   d.addColumn ("string", "Item")
   d.addColumn ("string", "Parent")
   d.addColumn ("string", "ToolTip")
@@ -550,7 +569,7 @@ local function orgChart (p)		-- a different visualization of the station / modul
       end
     end
   end
-  local options = {allowHtml = true, width = p.options.width}
+  local options = {allowHtml = true, width = p.width}
   local chart = gviz.Chart "OrgChart"
   return chart.draw (d, options)
 end
@@ -571,7 +590,7 @@ local function list_Devices (p)
   d.addColumn ("number", "Local Value")
   d.addColumn ("string", "Local Units")
   mapSensors (buildRow)
-  local options = {allowHtml = true, height= p.options.height or 700, width = p.options.width}
+  local options = {allowHtml = true, height= p.height or 700, width = p.width}
   local chart = gviz.Table ()
   return chart.draw (d, options)
 end
@@ -595,17 +614,35 @@ local function diagnostics ()
   return table.concat (info, '\n\n')
 end
 
+-- use authorization token provided by Netatmo Oath2 workflow
+local function authorize (p)
+  local state = p.state     -- TODO: check state matches authorization request
+  local code = p.code
+  local message
+  if not code then 
+    message = "Error: Authorization via Netatmo website denied: " ..tostring (p.error)
+  else
+    local token = Netatmo.retrieve_token_using_code (code)
+    if not token then 
+      message = "Error: Failed to retrieve access token using authorization code"
+    else
+      message = "Access granted to Netatmo Weather station - now RESTART Luup engine"
+      set ('RefreshToken', token or '')
+    end
+  end
+  luup.log (message)
+  return message
+end
+
 -- HTTP request handler
 _G.HTTP_Netatmo = function (_, lul_parameters)
+  local dispatch = {
+    list = list_Devices, 
+    organization = orgChart, 
+    diagnostics = diagnostics}
   local function exec ()
-    local p, status = cli.parse (lul_parameters)
-    local html = status
-    if p then
-      local reportType = p.actions.report
-      if reportType 
-      then html = ({list = list_Devices, organization = orgChart, diagnostics = diagnostics}) [reportType] (p) 
-      end
-    end
+    local page = lul_parameters.page
+    local html = (dispatch [page] or authorize) (lul_parameters) 
     return html
   end
   local _, result = pcall (exec)   -- catch any errors
@@ -715,7 +752,7 @@ local function update_child (child, sensor, metrics)
 
       local v = setChildVariable "WindAngle"
       setChildVariable "MaxWindAngle"
-      set ("DisplayLine2", (v or '?') .. '°', altuiSID, child.deviceNo)    -- ALTUI compatibility!!
+      set ("DisplayLine2", (v or '?') .. 'Â°', altuiSID, child.deviceNo)    -- ALTUI compatibility!!
     end
   end
 
@@ -760,7 +797,7 @@ local function updateLuupVariables (stations)
   end
 
   -- parent timestamp udate
-  Timestamp = os.date (timeFormat)
+  Timestamp = os.date (timeFormat) or '0'
   set ('Timestamp', Timestamp )		             -- say when this happened
   set ('DisplayLine1', Timestamp, altuiSID)     -- make it work in ALTUI too !
 end
@@ -768,9 +805,10 @@ end
 -- rotate the access keys
 _G.refreshNetatmo = function ()
   local delay = tokenRefresh * 60       -- normal periodic refresh of access tokens
-  local ok = Netatmo.refresh_tokens () 
-  if ok then 
+  local token = Netatmo.refresh_tokens () 
+  if token then 
     setNetatmoIcon "green"
+    set ('RefreshToken', token)
     log 'Access tokens rotated' 
   else 
     delay = 600                    -- retry in 10 minutes
@@ -793,8 +831,8 @@ _G.pollNetatmo = function()
     log (status)
     setNetatmoIcon "yellow"
   end
-  local AppMemoryUsed =  math.floor(collectgarbage "count")         -- app's own memory usage in kB
-  set ("AppMemoryUsed", AppMemoryUsed) 
+--  local AppMemoryUsed =  math.floor(collectgarbage "count")         -- app's own memory usage in kB
+--  set ("AppMemoryUsed", AppMemoryUsed) 
   log "poll complete"
   collectgarbage()                                                  -- tidy up a bit
 end
@@ -904,41 +942,48 @@ local function set_failure (status)
   luup.set_failure(status)
 end
 
+local function clean_up_old_variables ()
+  local unwanted = "ClientID ClientSecret Username Password TokenRefresh AppMemoryUsed"
+  if get "Username" then
+    for name in unwanted: gmatch "%a+" do
+      set (name)
+      log ("deleting variable: " .. name)
+    end
+  end
+end
+    
 -- init () called on startup
 function init  (lul_device)	
   NetatmoID = lul_device			-- save the global device ID
+
   set ('Version', ABOUT.VERSION)		-- save code version number in UI variable
+  clean_up_old_variables ()
 
   -- Get user-defined info, creating the variables in the UI with defaults if required
 
-  local client_id		   = uiVar ("ClientID", 		"Register at http://dev.netatmo.com/")
-  local client_secret	 = uiVar ("ClientSecret",	"Register at http://dev.netatmo.com/")
-  local username       = uiVar ("Username", 		"???")				-- need better way to secure credentials
-  local password		   = uiVar ("Password", 		"???")
---  local syslogInfo     = uiVar ("Syslog",       "")         -- send to syslog if IP address and Port 'XXX.XX.XX.XXX:YYY'
+  local client_id = get "ClientID" or ''
+  local client_secret	= get "ClientSecret" or ''
 
-  tokenRefresh 		     = uiVar ("TokenRefresh",    120, 10, 180)		-- get update intervals
-  measurementPoll 	   = uiVar ("MeasurementPoll",  10,  10,  60)		-- 10 minute default for polling
+  client_id = #client_id > 9 and client_id or "5200dfd21977593427000024"
+  client_secret	= #client_secret > 9 and client_secret or "th7BXHQWfid2YpgPWas4SVQtx"
+  
+  local refresh_token	= uiVar ("RefreshToken",	"Register at http://dev.netatmo.com/")
 
-  timeFormat			= uiVar ("TimeFormat",		"%a %H:%M")	
-  local childSensors		= uiVar ("ChildSensors",	"THCPNRW")			-- create children for these sensor types
-
-  cli = cli.parser "&report=org"
-
-  cli.parameter ("actions", "report", {"report", "show", "page"}, {"list","organization","diagnostics"}, "show device status, configuration, or diagnostics")
---	cli.parameter ("actions", "plot", "plot", "string", "plot specified sensor")
---
-  cli.parameter ("options",    "width",     "width",   "number",    "HTML output width")
-
+--  tokenRefresh 		   = uiVar ("TokenRefresh",    120, 10, 180)		-- get update intervals
+  measurementPoll 	  = uiVar ("MeasurementPoll",  10,  10,  60)		-- 10 minute default for polling
+  timeFormat			    = uiVar ("TimeFormat",		"%a %H:%M")	
+  local childSensors	= uiVar ("ChildSensors",	"THCPNRW")			-- create children for these sensor types
 
   -- create Netatmo object
   log "Netatmo initialisation..."
   setNetatmoIcon "red"       -- turn icon red until authorization successful
   Netatmo = netatmoAPI (client_id, client_secret)
+  luup.register_handler ("HTTP_Netatmo", "Netatmo") -- HTTP request handler (2022.12.31 / 2019.01.30  moved earlier in code)
 
-  -- username / password authentication
-  local ok = Netatmo.authenticate (username, password)
-  if not ok then 
+  -- token authentication
+  local token = Netatmo.refresh_tokens (refresh_token) 
+  set ('RefreshToken', token or '')
+  if not token then 
     log "Authorisation failed"
     set_failure (2) 
     return false, "Authorisation failed", "Netatmo" 
@@ -946,14 +991,13 @@ function init  (lul_device)
 
   -- get device configuration
   local info, status = Netatmo.get_stationsdata ()
+  
   if not info then 
     log "Failed to get stations data"
     log (status)                  -- more info about failure
     set_failure (1)
     return false, "Failed to get stations data", "Netatmo" 
   end
-
-  luup.register_handler ("HTTP_Netatmo", "Netatmo") -- HTTP request handler (2019.01.30  moved earlier in code)
 
   metric = Metrics (info.user.administrative)     -- set up metric unit conversions, etc.
 -- TODO: FOR TESTING ONLY: override units
