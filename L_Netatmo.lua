@@ -2,7 +2,7 @@
 
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2023.01.04",
+  VERSION       = "2023.01.05",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
   COPYRIGHT     = "(c) 2013-2023 AKBooer",
@@ -223,8 +223,10 @@ local function devVar (name, default, deviceNo)
 end
 
 -- parent device icons
-local function setNetatmoIcon (value)
+local function setNetatmoIcon (value, display_line)
   local index = {clear = 0, blue = 1, green = 2, yellow = 3, red = 4}
+  display_line = display_line or ''
+  set ("DisplayLine2", display_line, altuiSID)
   if index[value] then set (iconsVariable, index[value]) end
 end
 
@@ -378,11 +380,10 @@ local function netatmoAPI (client_id, client_secret)
       end	-- build the parameter string
       req = table.concat (req,'&')	
     end
-    local reply,code, headers = https.request (url, req)		-- body, code, headers, status
+    local reply,code = https.request (url, req)		-- body, code, headers, status
     if code ~= 200 then
       log ('HTTPS error = ' .. (code or 'nil'))
 --      log (json.encode {request = req})
---      log (json.encode {headers = headers})
 --      log (json.encode {reply = reply or "---none---"})
       Json = {}
     else
@@ -626,8 +627,8 @@ local function authorize (p)
     if not token then 
       message = "Error: Failed to retrieve access token using authorization code"
     else
-      message = "Access granted to Netatmo Weather station - now RESTART Luup engine"
-      set ('RefreshToken', token or '')
+      message = "Access granted to Netatmo Weather station - now RESTART Luup engine - " .. token
+      set ('RefreshToken', token)
     end
   end
   luup.log (message)
@@ -789,7 +790,7 @@ local function updateLuupVariables (stations)
 
         -- Battery levels
         if sensor == "Battery" and value < batteryWarning then 
-          setNetatmoIcon "blue"                  -- change device icon to blue
+          setNetatmoIcon ("blue", "Low Battery")                  -- change device icon to blue
         end
 
       end
@@ -812,7 +813,7 @@ _G.refreshNetatmo = function ()
     log 'Access tokens rotated' 
   else 
     delay = 600                    -- retry in 10 minutes
-    setNetatmoIcon "yellow"
+    setNetatmoIcon ("yellow", "Rotate fail - retrying...")
     log 'Access token rotation FAILURE, retrying in 10 minutes' 
   end
   luup.call_delay ('refreshNetatmo', delay, "")   -- reschedule
@@ -829,7 +830,7 @@ _G.pollNetatmo = function()
     updateLuupVariables (stationInfo)    -- ...this will change it back to blue if needed
   else
     log (status)
-    setNetatmoIcon "yellow"
+    setNetatmoIcon ("yellow", "Poll fail - retrying...")
   end
 --  local AppMemoryUsed =  math.floor(collectgarbage "count")         -- app's own memory usage in kB
 --  set ("AppMemoryUsed", AppMemoryUsed) 
@@ -947,7 +948,6 @@ local function clean_up_old_variables ()
   if get "Username" then
     for name in unwanted: gmatch "%a+" do
       set (name)
-      log ("deleting variable: " .. name)
     end
   end
 end
@@ -976,7 +976,7 @@ function init  (lul_device)
 
   -- create Netatmo object
   log "Netatmo initialisation..."
-  setNetatmoIcon "red"       -- turn icon red until authorization successful
+  setNetatmoIcon ("red" , "Authorising...")      -- turn icon red until authorization successful
   Netatmo = netatmoAPI (client_id, client_secret)
   luup.register_handler ("HTTP_Netatmo", "Netatmo") -- HTTP request handler (2022.12.31 / 2019.01.30  moved earlier in code)
 
@@ -985,6 +985,7 @@ function init  (lul_device)
   set ('RefreshToken', token or '')
   if not token then 
     log "Authorisation failed"
+    set ("DisplayLine2", "Authorisation failed", altuiSID)
     set_failure (2) 
     return false, "Authorisation failed", "Netatmo" 
   end
@@ -995,6 +996,7 @@ function init  (lul_device)
   if not info then 
     log "Failed to get stations data"
     log (status)                  -- more info about failure
+    set ("DisplayLine2", "Stations data failed", altuiSID)
     set_failure (1)
     return false, "Failed to get stations data", "Netatmo" 
   end
