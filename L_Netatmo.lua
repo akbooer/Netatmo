@@ -2,7 +2,7 @@
 
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2023.01.05",
+  VERSION       = "2023.01.06",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
   COPYRIGHT     = "(c) 2013-2023 AKBooer",
@@ -88,9 +88,10 @@ ABOUT = {
 -- 2022.12.30   changes due to deprecated Oath2 Client Credentials username/password login (thanks @mrFarmer aka @reneboer)
 --              see: https://smarthome.community/topic/993/netatmo-oath2-login/20
 
--- 2023.01.04   Use Oath2 Token Authorization - no need for individual user-created app on Netatmo site
+-- 2023.01.06   Use Oath2 Token Authorization - no need for individual user-created app on Netatmo site
 
 
+local socket  = require "socket"
 local https 	= require "ssl.https"
 local library	= require "L_Netatmo2"
 
@@ -117,6 +118,19 @@ local batterySID =  "urn:micasaverde-com:serviceId:HaDevice1" -- 'BatteryLevel'
 local tempXML		  = "D_TemperatureSensor1.xml"
 local humidXML		= "D_HumiditySensor1.xml"
 local genericXML	= "D_NetatmoMetric.xml"
+
+-- redirect URI for authorization
+
+local function myIP ()    
+  local mySocket = socket.udp ()
+  mySocket:setpeername ("42.42.42.42", 42)  -- arbitrary IP and PORT
+  local ip = mySocket:getsockname () 
+  mySocket: close()
+  return ip or "127.0.0.1"
+end
+
+local redirect_uri = table.concat {"http://", myIP(), ":3480/data_request?id=lr_Netatmo"}
+local state_parameter = tostring {}       -- unique state parameter string
 
 --   shorthand for the measurements
 local T,H,C,P,N,R,W     = "Temperature", "Humidity", "CO2", "Pressure", "Noise", "Rain", "WindStrength" 
@@ -409,7 +423,7 @@ local function netatmoAPI (client_id, client_secret)
   end
 
   -- retrieve token using authorization code
-  local function retrieve_token_using_code (code, scope)
+  local function retrieve_token_using_code (code, redirect_uri, scope)
     scope = scope or "read_station"
     local reply = HTTPS_request ("https://api.netatmo.net/oauth2/token",	
       {
@@ -417,7 +431,7 @@ local function netatmoAPI (client_id, client_secret)
         client_id     = client_id,
         client_secret = client_secret,
         code = code,
-        redirect_uri = "http://127.0.0.1:3480/data_request?id=lr_Netatmo",
+        redirect_uri = redirect_uri,
         scope = scope,
         } )
     access_token, refresh_token = reply.access_token, reply.refresh_token -- , reply.expires_in
@@ -616,18 +630,18 @@ local function diagnostics ()
 end
 
 -- use authorization token provided by Netatmo Oath2 workflow
-local function authorize (p)
-  local state = p.state     -- TODO: check state matches authorization request
+local function token (p)
+  local state = p.state
   local code = p.code
   local message
-  if not code then 
-    message = "Error: Authorization via Netatmo website denied: " ..tostring (p.error)
+  if not code or state ~= state_parameter then 
+    message = "Error: Authorization via Netatmo website denied: " .. tostring (p.error)
   else
-    local token = Netatmo.retrieve_token_using_code (code)
+    local token = Netatmo.retrieve_token_using_code (code, redirect_uri)
     if not token then 
       message = "Error: Failed to retrieve access token using authorization code"
     else
-      message = "Access granted to Netatmo Weather station - now RESTART Luup engine - " .. token
+      message = "Access granted to Netatmo Weather station - now RESTART Luup engine"
       set ('RefreshToken', token)
     end
   end
@@ -635,15 +649,39 @@ local function authorize (p)
   return message
 end
 
+local function authorize ()
+  local html = [[
+<!DOCTYPE html>
+<html>
+  <head><title>Authorize</title></head>
+  <body>
+    <p>
+    You will be redirected to the Netatmo website to login</br>
+    and authorize this plugin's access to your weather station.
+    </p>
+		<form method='get' action='https://api.netatmo.com/oauth2/authorize'> 
+      <input type='hidden' name='client_id' value='5200dfd21977593427000024'/> 
+      <input type='hidden' name='redirect_uri' value = ']] .. redirect_uri .. [['/>
+      <input type='hidden' name='scope' value='read_station'/> 
+      <input type='hidden' name='state' value=']] .. state_parameter .. [['/> 
+      <input type='submit' value='Login & Authorize'/> </form>
+  </body>
+</html>
+]]
+  return html, "text/html"
+end
+
+
 -- HTTP request handler
 _G.HTTP_Netatmo = function (_, lul_parameters)
   local dispatch = {
     list = list_Devices, 
+    authorize = authorize,
     organization = orgChart, 
     diagnostics = diagnostics}
   local function exec ()
     local page = lul_parameters.page
-    local html = (dispatch [page] or authorize) (lul_parameters) 
+    local html = (dispatch [page] or token) (lul_parameters) 
     return html
   end
   local _, result = pcall (exec)   -- catch any errors
@@ -976,7 +1014,7 @@ function init  (lul_device)
 
   -- create Netatmo object
   log "Netatmo initialisation..."
-  setNetatmoIcon ("red" , "Authorising...")      -- turn icon red until authorization successful
+  setNetatmoIcon ("red" , "Authorizing...")      -- turn icon red until authorization successful
   Netatmo = netatmoAPI (client_id, client_secret)
   luup.register_handler ("HTTP_Netatmo", "Netatmo") -- HTTP request handler (2022.12.31 / 2019.01.30  moved earlier in code)
 
@@ -985,9 +1023,9 @@ function init  (lul_device)
   set ('RefreshToken', token or '')
   if not token then 
     log "Authorisation failed"
-    set ("DisplayLine2", "Authorisation failed", altuiSID)
+    set ("DisplayLine2", "Not Authorized", altuiSID)
     set_failure (2) 
-    return false, "Authorisation failed", "Netatmo" 
+    return false, "Not Authorized", "Netatmo" 
   end
 
   -- get device configuration

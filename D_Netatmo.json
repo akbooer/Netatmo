@@ -126,7 +126,7 @@
 					"left": "0",
 					"Label": {
 						"lang_tag": "auth_button",
-						"text": "<form method='get' target='_blank' action='https://api.netatmo.com/oauth2/authorize'> <input type='hidden' name='client_id' value='5200dfd21977593427000024'/> <input type='hidden' name='scope' value='read_station'/> <input type='hidden' name='state' value='42'/> <input type='submit' value='Authorize'/> </form>"
+						"text": "<form action='/data_request' target='_blank' method='get'> <input type='hidden' name='id' value='lr_Netatmo'/> <input type='hidden' name='page' value='authorize'/> <input type='submit' value='Authorize'/></form>"
 					},
 					"Display": {
 						"Top": 130,
