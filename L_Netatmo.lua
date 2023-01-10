@@ -2,7 +2,7 @@
 
 ABOUT = {
   NAME          = "Netatmo",
-  VERSION       = "2023.01.06",
+  VERSION       = "2023.01.08",
   DESCRIPTION   = "Netatmo plugin - Virtual sensors for all your Netatmo Weather Station devices and modules",
   AUTHOR        = "@akbooer",
   COPYRIGHT     = "(c) 2013-2023 AKBooer",
@@ -89,14 +89,15 @@ ABOUT = {
 --              see: https://smarthome.community/topic/993/netatmo-oath2-login/20
 
 -- 2023.01.06   Use Oath2 Token Authorization - no need for individual user-created app on Netatmo site
+-- 2023.01.08   Changes to work on Vera too!
 
 
 local socket  = require "socket"
 local https 	= require "ssl.https"
 local library	= require "L_Netatmo2"
 
-local is_openLuup, json = pcall (require, "openLuup.json")
-if not is_openLuup then json = library.json() end
+local is_openLuup = luup.openLuup
+local json = is_openLuup and require "openLuup.json" or library.json()
 
 local gviz = library.gviz()
 
@@ -129,7 +130,10 @@ local function myIP ()
   return ip or "127.0.0.1"
 end
 
-local redirect_uri = table.concat {"http://", myIP(), ":3480/data_request?id=lr_Netatmo"}
+local myPORT = is_openLuup and ':' or "/port_"    -- required for Vera functionality
+
+local redirect_uri = table.concat {"http://", myIP(), myPORT, "3480/data_request?id=lr_Netatmo"}
+
 local state_parameter = tostring {}       -- unique state parameter string
 
 --   shorthand for the measurements

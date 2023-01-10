@@ -126,7 +126,7 @@
 					"left": "0",
 					"Label": {
 						"lang_tag": "auth_button",
-						"text": "<form action='/data_request' target='_blank' method='get'> <input type='hidden' name='id' value='lr_Netatmo'/> <input type='hidden' name='page' value='authorize'/> <input type='submit' value='Authorize'/></form>"
+						"text": "<form action='/port_3480/data_request' target='_blank' method='get'> <input type='hidden' name='id' value='lr_Netatmo'/> <input type='hidden' name='page' value='authorize'/> <input type='submit' value='Authorize'/></form>"
 					},
 					"Display": {
 						"Top": 130,
